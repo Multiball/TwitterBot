@@ -2,8 +2,20 @@
 overview
 ***
 
-This is a simple thing I cooked up to tweet long novels. I view it more as a work of art than anything, though CS principles certainyl are brought to bear on its creation. To better remember how to use this thing, because it's good practice, and on the off-chance that anyone wants to use this library other than myself, I am hereby creating some documentation for these modules. They number three:
+This is a simple thing I cooked up to tweet long novels. I view it more as a work of art than anything, though CS principles certainly are brought to bear on its creation. To better remember how to use this thing, because it's good practice, and on the off-chance that anyone wants to use this library other than myself, I am hereby creating some documentation for these modules and their use. 
 
+---
+SECTION 1: USING THE BOT
+---
+1) what you need to use this package
+The basics.
+
+2) configuration
+Still pretty basic.
+
+---
+SECTION 2: UNDERSTANDING THE BOT
+---
 1)book_parser.py
 This is the module that breaks a book into segments of no more than 140 characters. It is used to decompose books and retreive the componenet lines from them. It does a lot of file IO and creates a lot of files in the course of its execution.
 
@@ -13,9 +25,26 @@ Far from anything resembling a legitimate Twitter library. This module communica
 3)central_command.py
 This is the module that coordinates the previous two and actually makes the calls to make things happen.
 
+
 ***
 README PROPER
 ***
-Here are notes about the various modules.
+
+---
+SECTION 1
+---
+1) what you need to use this package
+The basic thing you need is a twitter account. That should be fairly obvious; the bot will tweet through whatever accoutn you tell it to, so you might want to get it its own, dedicated account. To get all the security in formation and stuff you need, you should make an "app," which you can do by logging into http://dev.twitter.com with your twitter account information. Set its access level to "read and write," and make sure that you grant those permissions from the account proper (not the dev account; it's confusing and I might not know what I'm talking about).
+
+2) configuration
+Now that you have an account and an app, you can get the security information you need to authenticate requests. This information is to be stored in the plaintext file "twitbot.config". A file "twitbot.config.example" has been provded; you can start from there by copying or renaming it into a file called "twitbot.config". You'll notice some placeholder values in parenthesese in here: here's how to fill them in.
+If you navigate tot your app in dev.twitter.com, there should be a list with the items "consumer key," "consumer secret," and, a little ways down, "Access token" and "access secret". All these things should be followed by essentially random strings of letters and numbers. Copy-paste these strings into the config file, replacing any parenthetical statements in their entirety with the values copied from the app's page.
+Each line should consist of one string, spelled EXACTLY as it is in the example file, followed by the string copy-pasted from the app's twitter page, seperated by a space. There is no support for comments, and they will probably break something. Order of the lines shouldn't matter.
 
 
+---
+SECTION 2
+---
+1) Coming soon(?)
+2) Coming soon(?)
+3) Coming soon(?)
