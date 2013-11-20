@@ -1,0 +1,21 @@
+***
+overview
+***
+
+This is a simple thing I cooked up to tweet long novels. I view it more as a work of art than anything, though CS principles certainyl are brought to bear on its creation. To better remember how to use this thing, because it's good practice, and on the off-chance that anyone wants to use this library other than myself, I am hereby creating some documentation for these modules. They number three:
+
+1)book_parser.py
+This is the module that breaks a book into segments of no more than 140 characters. It is used to decompose books and retreive the componenet lines from them. It does a lot of file IO and creates a lot of files in the course of its execution.
+
+2)twitterutils.py
+Far from anything resembling a legitimate Twitter library. This module communicates with Twitter, and is designed for this specific use only. It uses hard-coded base string URLs, consumer secrets, and access token secrets. With a bit of fenegling, it might be made into a Twitter library, but that's not within the scope of this project.
+
+3)central_command.py
+This is the module that coordinates the previous two and actually makes the calls to make things happen.
+
+***
+README PROPER
+***
+Here are notes about the various modules.
+
+
