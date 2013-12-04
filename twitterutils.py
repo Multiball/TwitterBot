@@ -8,6 +8,7 @@ import base64
 from hashlib import sha1
 import hmac
 import random
+import sys
 import string
 import socket
 import time
@@ -62,17 +63,8 @@ def generate_oauth_nonce():
 # in this case, it should be the arguments we want to include in
 # our HTTP header.
 def generate_oauth_signature(arguments):
-	#print "Generating signature with ", arguments, "..."
-	sig_param_string = ""
-	for name, value in sorted(arguments.iteritems()):
-		sig_param_string += quote(name) + "=" + quote(value) + "&"
-	# The header for all our Http request will always be 
-	# POST 1.1/statuses/update.json
-	# or
-	# GET 1.1/account/verify_credentials.json
-	# with api.twitter.com as the host. We start with that, percent-encoded.
-	sig_param_string = sig_param_string[0:len(sig_param_string)-1] # remove trailing '&'
-	print "param string|", sig_param_string
+	sig_param_string = url_arguments_builder(arguments, "&")
+
 	if "status" in arguments.keys():
 		sig_base_string = "POST&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fupdate.json&"
 	else:
@@ -154,54 +146,111 @@ def generate_oauth_arguments(header_arguments):
 	returner = returner[0:len(returner)-2] # remove trailing ", "
 	return returner
 
-# main control function, that assembles the header and sends it to Twitter
-def generate_update_request(status):
+#	REQUEST
+#	Generalized request builder
+#	INPUT: requestType | String | takes "GET" or "POST"
+#		   target | String | example "/1.1/account/verify_credentials.json"
+#		   arguments | Dict | example {"include_entities" : "true"}
+#	NO GLOBALS
+#	NO SIDE EFFECTS
+#	OUTPUT: returns a string that represents the request
 
-	if len(status) > 140:
-		return "status request too long (length "+ str(len(status)) +"); not sent"
-	status_string = quote(status)
+def request(requestType, target, arguments):
 
-	arguments = {"status":status_string}
+	if(False == validate_arguments(arguments)) :
+		print("Invalid arguments.")
+		sys.exit(-1)
 
-	#header
-	request =   "POST /1.1/statuses/update.json HTTP/1.1\r\n"
+	request_body = request_body_builder(arguments)
+
+	request =   requestType + " " + target + request_line_builder(arguments)  + " HTTP/1.1\r\n"
 	request +=	"Accept: */*\r\n"
 	request +=	"Connection: close\r\n"
 	request +=	"User-Agent: OAuth gem v0.4.4\r\n"
 	request +=	"Content-Type: applicaton/x-www-form-urlencoded\r\n"
 	request +=	"Authorization: OAuth " + generate_oauth_arguments(arguments) + "\r\n"
-	request +=	"Content-Length: " + str(len(("status="+status_string)) ) + "\r\n"
-	request +=	"Host: api.twitter.com\r\n\r\n"
-	#body
-	request += "status=" + status_string + "\r\n\r\n"
-
-	return request
-
-def generate_verify_credentials_request():
-
-	arguments = {"include_entities":"true"}
-	request_target = "GET /1.1/account/verify_credentials.json"
-	if len(arguments) > 0:
-		request_target += "?"
-		print arguments
-		for k,v in arguments.iteritems():
-			request_target += k + "=" + v + "&"
-		#remove trailing '&'
-		request_target = request_target[0:len(request_target)-1] 
-
-	#header
-	request =   request_target + " HTTP/1.1\r\n"
-	request +=	"Accept: */*\r\n"
-	request +=	"Connection: close\r\n"
-	request +=	"User-Agent: OAuth gem v0.4.4\r\n"
-	request +=	"Content-Type: applicaton/x-www-form-urlencoded\r\n"
-	request +=	"Authorization: OAuth " + generate_oauth_arguments(arguments) + "\r\n"
-	request +=	"Content-Length: 0" + "\r\n"
+	request +=	"Content-Length: " + str(len(request_body)) + "\r\n"
 	request +=	"Host: api.twitter.com\r\n"
 	request += "\r\n"
-	#body
-	
-	request += "\r\n" #"include_entities=true" + "\r\n"
-	request += "\r\n"
+	# TODO : Figure out if this is where the request body actually is.
+	request += request_body
 
 	return request
+
+#	URL ARGUMENTS BUILDER
+#	Turns your arguments into a string to build your URL
+#	INPUT: arguments | Dict | example {"include_entities" : "true"}
+#		   delimiter | String | example "&" or "\r\n"
+#	NO GLOBALS
+# 	NO SIDE EFFECTS
+#	OUTPUT: returns a string that is a delimited representation of the arguments
+
+def url_arguments_builder(arguments, delimiter):
+	s = []
+	for k,v in sorted(arguments.iteritems()):
+		s.append(quote(k)+"="+quote(v))
+	return delimiter.join(s)
+
+#	REQUEST LINE BUILDER
+#	Checks for arguments that belong in the URL Request Line
+#	INPUT: arguments | Dict | example {"include_entities" : "true"}
+#	GLOBALS: request_line_arguments | List | contains the keys which are allowed in the URI Request Head
+#	NO SIDE EFFECTS
+#	OUTPUT: returns a string that gets added to the URL Request Line
+
+request_line_arguments = ["include_entities", "status"] # Poor system design
+def request_line_builder(arguments):
+	new_url_headers = request_dictionary_filter(arguments,request_line_arguments)
+	if len(new_url_headers) > 0 :
+		return "?" + url_arguments_builder(new_url_headers, "&")
+	else : 
+		return ""
+
+
+#	REQUEST BODY BUILDER
+#	Checks for arguments that belong in the Request Body
+#	INPUT: arguments | Dict | example {"include_entities" : "true"}
+#	GLOBALS : request_body_arguments | List | contains the keys which are allowed in the Request Body
+#	NO SIDE EFFECTS
+#	OUTPUT: returns a string that belongs to the HTTP Request Body
+
+request_body_arguments = [] # Poor system design
+def request_body_builder(arguments):
+
+	new_request_body = request_dictionary_filter(arguments,request_body_arguments)
+	if len(new_request_body) > 0 :
+		return url_arguments_builder(new_request_body,"\r\n") + "\r\n"
+	else:
+		return ""
+
+#	REQUEST DICTIONARY FILTER
+#	To avoid repeating the dictionary comprehension
+#	INPUT: dictionary | Dict | example {"include_entities" : "true"}
+#		   filterList | List | a list to compare the keys in the Dictionary to. example ["status"]
+#	NO GLOBALS
+#	NO SIDE EFFECTS
+#	OUTPUT: returns a new Dictionary with certain items filtered in
+
+def request_dictionary_filter(dictionary, filterList):
+	return {k:v for k, v in sorted(dictionary.iteritems()) for args in filterList if args == k}
+
+
+#	VALIDATE ARGUMENTS
+#	Validates the arguments that's going into the Request
+#	INPUT : arguments | Dict | example {"status" : "Some tweet"}
+#	GLOBALS : argument_validation | Dict | contains functions that validate the value for that specific key.
+#	NO SIDE EFFECTS
+#	OUTPUT: returns a boolean if all arguments have been validated for correct values
+
+argument_validation = {
+						"status" : lambda x: len(x) < 140, # Wow, lambdas are ugly as hell...
+						"include_entities" : lambda x : x == "true" or x == "false"
+						} # Poor system design
+
+def validate_arguments(arguments):
+	truity = [e(v) for k,v in sorted(arguments.iteritems()) for s,e in sorted(argument_validation.iteritems()) if k == s]
+	# I just realized there isn't a fold function for Python...
+	for k in truity:
+		if False == k :
+			return False
+	return True

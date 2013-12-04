@@ -8,9 +8,10 @@ twitter_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 twitter_socket = ssl.wrap_socket(twitter_socket)
 twitter_socket.connect(("api.twitter.com", 443)) #80 is default HTTP port; 443 is default HTTPS port
 
-request = twitterutils.generate_verify_credentials_request()
+#request = twitterutils.generate_verify_credentials_request()
 #request = twitterutils.generate_update_request("Maybe he'll finally find his keys")
 
+request = twitterutils.request("POST","/1.1/statuses/update","Test tweet.")
 
 #header
 """
