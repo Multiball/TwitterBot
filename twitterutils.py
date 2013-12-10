@@ -194,13 +194,13 @@ def url_arguments_builder(arguments, delimiter):
 #	REQUEST LINE BUILDER
 #	Checks for arguments that belong in the URL Request Line
 #	INPUT: arguments | Dict | example {"include_entities" : "true"}
-#	GLOBALS: request_line_arguments | List | contains the keys which are allowed in the URI Request Head
+#	GLOBALS: REQUEST_LINE_ARGUMENTS | List | contains the keys which are allowed in the URI Request Head
 #	NO SIDE EFFECTS
 #	OUTPUT: returns a string that gets added to the URL Request Line
 
-request_line_arguments = ["include_entities", "status"] # Poor system design
+REQUEST_LINE_ARGUMENTS = ["include_entities", "status"] # Poor system design
 def request_line_builder(arguments):
-	new_url_headers = request_dictionary_filter(arguments,request_line_arguments)
+	new_url_headers = request_dictionary_filter(arguments,REQUEST_LINE_ARGUMENTS)
 	if len(new_url_headers) > 0 :
 		return "?" + url_arguments_builder(new_url_headers, "&")
 	else : 
@@ -210,14 +210,14 @@ def request_line_builder(arguments):
 #	REQUEST BODY BUILDER
 #	Checks for arguments that belong in the Request Body
 #	INPUT: arguments | Dict | example {"include_entities" : "true"}
-#	GLOBALS : request_body_arguments | List | contains the keys which are allowed in the Request Body
+#	GLOBALS : REQUEST_BODY_ARGUMENTS | List | contains the keys which are allowed in the Request Body
 #	NO SIDE EFFECTS
 #	OUTPUT: returns a string that belongs to the HTTP Request Body
 
-request_body_arguments = [] # Poor system design
+REQUEST_BODY_ARGUMENTS = [] # Poor system design
 def request_body_builder(arguments):
 
-	new_request_body = request_dictionary_filter(arguments,request_body_arguments)
+	new_request_body = request_dictionary_filter(arguments,REQUEST_BODY_ARGUMENTS)
 	if len(new_request_body) > 0 :
 		return url_arguments_builder(new_request_body,"\r\n") + "\r\n"
 	else:
@@ -238,17 +238,17 @@ def request_dictionary_filter(dictionary, filterList):
 #	VALIDATE ARGUMENTS
 #	Validates the arguments that's going into the Request
 #	INPUT : arguments | Dict | example {"status" : "Some tweet"}
-#	GLOBALS : argument_validation | Dict | contains functions that validate the value for that specific key.
+#	GLOBALS : ARGUMENT_VALIDATION | Dict | contains functions that validate the value for that specific key.
 #	NO SIDE EFFECTS
 #	OUTPUT: returns a boolean if all arguments have been validated for correct values
 
-argument_validation = {
+ARGUMENT_VALIDATION = {
 						"status" : lambda x: len(x) < 140, # Wow, lambdas are ugly as hell...
 						"include_entities" : lambda x : x == "true" or x == "false"
 						} # Poor system design
 
 def validate_arguments(arguments):
-	truity = [e(v) for k,v in sorted(arguments.iteritems()) for s,e in sorted(argument_validation.iteritems()) if k == s]
+	truity = [e(v) for k,v in sorted(arguments.iteritems()) for s,e in sorted(ARGUMENT_VALIDATION.iteritems()) if k == s]
 	# I just realized there isn't a fold function for Python...
 	for k in truity:
 		if False == k :
